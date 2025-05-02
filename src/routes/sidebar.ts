@@ -1,71 +1,61 @@
+import { PATH } from "@/constants/paths";
+import { Role } from "@/types/User";
 import { Book, ChartColumnStacked, Contact, LayoutDashboard } from "lucide-react";
-import { useLocation } from "react-router";
+
 
 export const SidebarData = [
   {
     title: "Dashboard",
-    url: "",
+    url: PATH.Dashboard,
     icon: LayoutDashboard,
-    isActive: true
+    isActive: true,
+    roles: [Role.Admin, Role.Customer]
   },
   {
     title: "Books",
-    url: "/books",
     icon: Book,
     isActive: true,
+    roles: [Role.Admin, Role.Customer],
     items: [
       {
-        title: "List",
-        url: "/books",
+        title: "Bookshelf",
+        url: PATH.Book,
+        roles: [Role.Admin, Role.Customer]
       },
       {
-        title: "Borrow request",
-        url: "/books/borrow",
+        title: "Borrowing requests",
+        url: PATH.BookBorrowwingRequest,
+        roles: [Role.Admin, Role.Customer]
+      },
+      {
+        title: "Borrowing books",
+        url: PATH.BookBorrowwingList,
+        roles: [Role.Admin, Role.Customer]
       },
     ],
   },
   {
     title: "Category",
-    url: "/book-category",
+    url: PATH.BookCategory,
     icon: ChartColumnStacked,
+    roles: [Role.Admin]
   },
   {
-    title: "Account",
-    url: "/account",
+    title: "User",
     icon: Contact,
+    roles: [Role.Admin],
     items: [
       {
-        title: "Users",
-        url: "#",
+        title: "User list",
+        url: PATH.UserAccountList,
+        roles: [Role.Admin]
       },
       {
-        title: "Roles",
-        url: "#",
+        title: "Activity log",
+        url: PATH.UserActivityLog,
+        roles: [Role.Admin]
       }
     ],
   },
 ]
 
-export const getBreadcrumb = () => {
-  const { pathname } = useLocation(); // Lấy URL hiện tại
-  const breadcrumbs = [];
-
-  for (const item of SidebarData) {
-    const itemUrl = item.url || "";
-    if(itemUrl=="") continue;
-    if (pathname.startsWith(itemUrl)) {
-      breadcrumbs.push(item.title);
-
-      if (item.items) {
-        for (const subItem of item.items) {
-          const subItemUrl = subItem.url ? `${itemUrl}${subItem.url.startsWith("/") ? subItem.url : "/" + subItem.url}` : itemUrl;
-          if (pathname === subItemUrl) {
-            breadcrumbs.push(subItem.title);
-          }
-        }
-      }
-    }
-  }
-
-  return breadcrumbs;
-};
