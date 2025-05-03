@@ -1,4 +1,5 @@
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader";
+import { getRoleName } from "@/lib/utils";
 import { User } from "@/types/User";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -16,7 +17,7 @@ export const UserColumnsData: ColumnDef<User>[] = [
         header: ({ column }) => (
             <DataTableColumnHeader className="w-20" column={column} title='Role' />
         ),
-        cell: ({ row }) => <div>{row.original.roleName}</div>,
+        cell: ({ row }) => <div>{getRoleName(row.original.role)}</div>,
         enableSorting: false
     },
     {

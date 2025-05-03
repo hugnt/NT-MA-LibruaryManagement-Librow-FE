@@ -5,8 +5,7 @@ import DataTablePagination from "@/components/data-table/DataTablePagination";
 import PageHeader from "@/components/page/PageHeader";
 import { Button } from "@/components/ui/button";
 import { areDifferentDates, getDatePlus, getMaxDateString, handleSuccessApi } from "@/lib/utils";
-import { BorrowingBook } from "@/types/BookBorrowingRequest";
-import { DataFilter } from "@/types/filter";
+import { BorrowingBook, BorrowingRequestFilter, RequestStatus } from "@/types/BookBorrowingRequest";
 import { ColumnDef } from "@tanstack/react-table";
 import { parseISO } from "date-fns";
 import { CalendarArrowUp, Eye } from "lucide-react";
@@ -16,12 +15,13 @@ import { ExtendDueDateDialog } from "../components/ExtendDueDateDialog";
 import bookBorrowingRequestService from "../service/bookBorrowingRequestService";
 import { useAuthContext } from "@/context/authContext";
 import { Role } from "@/types/User";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 export default function BorrowingBookList() {
     const { user } = useAuthContext();
     const [data, setData] = useState<BorrowingBook[]>([]);
-    const [filter, setFilter] = useState<DataFilter>({ pageNumber: 1, pageSize: 5 });
+    const [filter, setFilter] = useState<BorrowingRequestFilter>({ pageNumber: 1, pageSize: 5 });
     const [totalRecords, setTotalRecords] = useState<number>(0);
     const [tableLoading, setTableLoading] = useState<boolean>(false);
     const [detail, setDetails] = useState<BorrowingBook>();
@@ -37,21 +37,21 @@ export default function BorrowingBookList() {
                 <DataTableColumnHeader className="text-center" column={column} title='Action' />
             ),
             cell: ({ row }) => (
-                <div className="flex space-x-3 justify-end items-center">
-                    {user?.role === Role.Customer && !areDifferentDates(row.original.dueDate, row.original.extendedDueDate) && (
+                <div className="flex space-x-3 justify-center items-center">
+                    {row.original.requestStatus == RequestStatus.Approved && user?.role === Role.Customer && !areDifferentDates(row.original.dueDate, row.original.extendedDueDate) && (
                         <Button onClick={() => handleViewBookDetails(row.original, true)} size="sm" className="bg-blue-500 h-8 px-2 py-0">
                             <CalendarArrowUp size={20} className="mr-1" />
                             Extend
                         </Button>
                     )}
-                    {(user?.role === Role.Admin || areDifferentDates(row.original.dueDate, row.original.extendedDueDate)) && (
+                    {row.original.requestStatus == RequestStatus.Approved && (user?.role === Role.Admin || areDifferentDates(row.original.dueDate, row.original.extendedDueDate)) && (
                         <span className="text-[14px] italic text-slate-600">
                             Extended ({areDifferentDates(row.original.dueDate, row.original.extendedDueDate) ? '1/1' : '0/1'})
                         </span>
                     )}
-                    <Button size="sm" onClick={() => handleViewBookDetails(row.original)} className="bg-gray-500 h-8 px-2 py-0">
-                        <Eye size={16} />
-                    </Button>
+                    {row.original.requestStatus != RequestStatus.Approved && <Button size="sm" onClick={() => handleViewBookDetails(row.original)} className="bg-gray-500 h-8 px-2 py-0">
+                        <Eye size={16} className="mr-1" /> View
+                    </Button>}
                 </div>
             ),
         }
@@ -93,11 +93,31 @@ export default function BorrowingBookList() {
         setOpenDetails(false);
     }
 
+    const handleRequestStatusChange = (value: string) => {
+        const requestStatus = value === "all" ? undefined : (Number(value) as RequestStatus);
+        setFilter({ ...filter, status: requestStatus })
+    };
 
 
     return (
         <div>
             <PageHeader title="Borrowing books" subtitle="Here&apos;s a list of books have been borrowed" />
+            <div>
+                <Select defaultValue={"all"} onValueChange={handleRequestStatusChange}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select request status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Request Status</SelectLabel>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value={`${RequestStatus.Waiting}`}>Waiting</SelectItem>
+                            <SelectItem value={`${RequestStatus.Approved}`}>Approved</SelectItem>
+                            <SelectItem value={`${RequestStatus.Rejected}`}>Rejected</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
             <div className='space-y-4'>
                 <DataTable data={data} columns={columns} loading={tableLoading} />
                 <DataTablePagination
@@ -110,7 +130,7 @@ export default function BorrowingBookList() {
             </div>
             <ExtendDueDateDialog
                 loading={formLoading}
-                updatable={formEditable}
+                editable={formEditable}
                 open={openDetails}
                 setOpen={setOpenDetails}
                 data={detail}

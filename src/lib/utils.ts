@@ -5,7 +5,7 @@ import { toaster } from "@/components/dialog/toaster"
 import { PATH } from "@/constants/paths"
 import { STORAGE_KEY } from "@/constants/storageKeys"
 import { RequestStatus } from "@/types/BookBorrowingRequest"
-import { Token } from "@/types/User"
+import { Role, Token } from "@/types/User"
 import { clsx, type ClassValue } from "clsx"
 import { endOfMonth, format, isEqual, parseISO, startOfMonth } from "date-fns"
 import { twMerge } from "tailwind-merge"
@@ -145,7 +145,14 @@ export const getStatusName = (status: RequestStatus | undefined): string => {
   else return ""
 }
 
-
+export const getRoleName = (role: Role | undefined): string => {
+  if (role == Role.Admin) {
+    return "Admin"
+  } else if (role == Role.Customer) {
+    return "Customer"
+  }
+  else return ""
+}
 
 // Helper function to safely format dates
 export const formatDate = (dateString: string | Date | null | undefined) => {

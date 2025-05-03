@@ -15,7 +15,7 @@ export enum BorrowingStatus {
 }
 
 export interface BorrowingRequestFilter extends DataFilter {
-    status: RequestStatus;
+    status?: RequestStatus;
 };
 
 export type BorrowingDetailsRequest = {
@@ -44,7 +44,6 @@ export type BorrowingRequest = {
     id: string;
     requestorName: string;
     approverName: string;
-    statusName: string;
     status: RequestStatus;
     createdAt: Date;
     updatedAt: Date;
@@ -74,7 +73,8 @@ export type BorrowingBook = {
     author: string;
     dueDate: string;
     extendedDueDate: string;
-    status: BorrowingStatus,
+    bookStatus: BorrowingStatus,
+    requestStatus: RequestStatus
 }
 
 export type RequestFilter = {

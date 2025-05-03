@@ -4,34 +4,28 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import bookCategoryService from "@/modules/book-category/service/bookCategoryService";
 import { Book, defaultBook } from "@/types/Book";
 import { BookCategory } from "@/types/BookCategory";
 import { FormMode, FormSetting, formSettingDefault } from "@/types/form";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 interface FormDetailProps {
     formSetting: FormSetting,
     setFormSetting: (setting: FormSetting) => void,
     data?: Book,
+    categories: BookCategory[],
     title?: string,
     loading?: boolean,
     onSubmit?: (data: Book) => void
 }
 
 export default function FormDetails(props: FormDetailProps) {
-    const { formSetting = formSettingDefault, setFormSetting = () => { }, data, onSubmit = () => { }, title = "Details", loading = false } = props;
-    const [categories, setCategories] = useState<BookCategory[]>([]);
+    const { formSetting = formSettingDefault, setFormSetting = () => { }, data, categories = [], onSubmit = () => { }, title = "Details", loading = false } = props;
     const form = useForm<Book>({
         defaultValues: data ?? defaultBook,
     })
 
-    useEffect(() => {
-        bookCategoryService.getByFilter().then(res => {
-            setCategories(res.data || [])
-        })
-    }, [])
 
     useEffect(() => {
         if (data) form.reset(data);

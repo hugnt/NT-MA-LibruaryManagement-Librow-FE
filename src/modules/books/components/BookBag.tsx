@@ -23,6 +23,7 @@ interface BookBagProps {
     selectedBooks: Book[]
     setSelectedBooks: (selectedBooks: Book[]) => void
     onSubmitRequest: () => void
+    loading: boolean
 }
 
 export default function BookBag(props: BookBagProps) {
@@ -32,6 +33,7 @@ export default function BookBag(props: BookBagProps) {
         selectedBooks = [],
         setSelectedBooks = () => { },
         onSubmitRequest = () => { },
+        loading = false
     } = props
 
     useEffect(() => {
@@ -61,7 +63,7 @@ export default function BookBag(props: BookBagProps) {
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
-            <SheetContent className="flex flex-col">
+            <SheetContent onInteractOutside={event => loading && event.preventDefault()} className="flex flex-col">
                 <SheetHeader className="text-left">
                     <SheetTitle>Your book bag</SheetTitle>
                     <SheetDescription>Set return dates and request to borrow these books.</SheetDescription>
@@ -109,6 +111,7 @@ export default function BookBag(props: BookBagProps) {
                         <Button variant="outline">Close</Button>
                     </SheetClose>
                     <Button
+                        loading={loading}
                         disabled={selectedBooks.length === 0 || !allBooksHaveDueDates}
                         onClick={onSubmitRequest}>
                         Request now

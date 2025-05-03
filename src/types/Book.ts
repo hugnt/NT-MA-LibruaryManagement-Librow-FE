@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { DataFilter } from "./filter";
 
 
 export type Book = {
@@ -22,3 +23,21 @@ export const defaultBook: Book = {
     available: 0,
     dueDate: format(new Date(), "yyyy-MM-dd")
 };
+
+export type BookFilter = DataFilter & {
+    minAvailable: number;
+    maxAvailable: number;
+    minRating: number;
+    maxRating: number;
+    categoryId?: string;
+}
+
+export const bookFilterDefault: BookFilter = {
+    pageSize: 10,
+    pageNumber: 1,
+    totalRecords: 0,
+    minAvailable: 0,
+    maxAvailable: -1,
+    minRating: 0,
+    maxRating: 5
+}

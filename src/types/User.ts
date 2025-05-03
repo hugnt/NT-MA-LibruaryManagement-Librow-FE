@@ -33,7 +33,6 @@ export type User = {
     username: string;
     email: string;
     role: Role;
-    roleName: string;
 };
 
 export type UserRequest = RegisterRequest & {
@@ -59,7 +58,6 @@ export const defaultUser: User = {
     username: '',
     email: '',
     role: Role.Customer,
-    roleName: '',
 };
 
 export type LoginResponse = {

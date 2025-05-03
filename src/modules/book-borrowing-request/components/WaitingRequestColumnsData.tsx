@@ -1,6 +1,6 @@
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader";
 import { Badge } from "@/components/ui/badge";
-import { getStatusClassname } from "@/lib/utils";
+import { getStatusClassname, getStatusName } from "@/lib/utils";
 import { BorrowingRequest } from "@/types/BookBorrowingRequest";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -31,11 +31,11 @@ export const WaitingRequestColumnsData: ColumnDef<BorrowingRequest>[] = [
         enableSorting: false
     },
     {
-        accessorKey: 'statusName',
+        accessorKey: 'status',
         header: ({ column }) => (
             <DataTableColumnHeader className="w-20" column={column} title='Status' />
         ),
-        cell: ({ row }) => <Badge className={` text-[12px] ${getStatusClassname(row.original.status)}`}>{row.getValue('statusName')}</Badge>,
+        cell: ({ row }) => <Badge className={`text-[12px] ${getStatusClassname(row.original.status)}`}>{getStatusName(row.original.status)}</Badge>,
         enableSorting: false
     }
 

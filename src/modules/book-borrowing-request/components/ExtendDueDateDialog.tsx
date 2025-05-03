@@ -1,5 +1,6 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -12,7 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { areDifferentDates, getDatePlus, getMaxDate } from "@/lib/utils"
+import { areDifferentDates, getDatePlus, getMaxDate, getStatusClassname, getStatusName } from "@/lib/utils"
 import { ReturnDatePicker } from "@/modules/books/components/ReturnDatePicker"
 import { BorrowingBook } from "@/types/BookBorrowingRequest"
 import { format, parseISO } from "date-fns"
@@ -26,11 +27,11 @@ interface ExtendDueDateDialog {
     setData: (data?: BorrowingBook) => void
     loading?: boolean
     onConfirmExtend: () => void
-    updatable?: boolean
+    editable?: boolean
 }
 
 export function ExtendDueDateDialog(props: ExtendDueDateDialog) {
-    const { open = false, setOpen = () => { }, data, setData = () => { }, loading = false, onConfirmExtend = () => { }, updatable = false } = props;
+    const { open = false, setOpen = () => { }, data, setData = () => { }, loading = false, onConfirmExtend = () => { }, editable = false } = props;
     const setExtendDate = (date: string | undefined) => {
         if (!date || !data) return
         const updatedData: BorrowingBook = { ...data, extendedDueDate: date }
@@ -44,8 +45,8 @@ export function ExtendDueDateDialog(props: ExtendDueDateDialog) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[450px]">
                 <DialogHeader>
-                    <DialogTitle className="text-xl">Extend Return Date</DialogTitle>
-                    <DialogDescription>You can only extend the return date of the book once.</DialogDescription>
+                    <DialogTitle className="text-xl">{editable ? "Extend Return Date" : "Details"}</DialogTitle>
+                    <DialogDescription>{editable ? "You can only extend the return date of the book once." : "Information about your borrowed books"}</DialogDescription>
                 </DialogHeader>
                 <Card className="border-muted p-4 bg-slate-100">
                     <CardContent className="p-0">
@@ -71,11 +72,16 @@ export function ExtendDueDateDialog(props: ExtendDueDateDialog) {
                             </div>
 
                             <div className="grid grid-cols-3 items-center">
+                                <Label className="text-muted-foreground">Request Status:</Label>
+                                <Badge className={`text-[12px] ${getStatusClassname(data.requestStatus)}`}>{getStatusName(data.requestStatus)}</Badge>
+                            </div>
+
+                            <div className="grid grid-cols-3 items-center">
                                 <Label className="text-muted-foreground">Due Date:</Label>
                                 <span className="col-span-2">{format(new Date(data.dueDate), "MM/dd/yyyy")}</span>
                             </div>
 
-                            {!updatable && areDifferentDates(data.extendedDueDate, data.dueDate) && <div className="grid grid-cols-3 items-center">
+                            {!editable && areDifferentDates(data.extendedDueDate, data.dueDate) && <div className="grid grid-cols-3 items-center">
                                 <Label className="text-muted-foreground">Extende due date:</Label>
                                 <span className="col-span-2">{format(new Date(data.extendedDueDate), "MM/dd/yyyy")}</span>
                             </div>}
@@ -84,7 +90,7 @@ export function ExtendDueDateDialog(props: ExtendDueDateDialog) {
                 </Card>
 
                 <div className="mt-1">
-                    {updatable && <ReturnDatePicker
+                    {editable && <ReturnDatePicker
                         label="Select Extended Date"
                         classNameButton="bg-green-200"
                         date={data.extendedDueDate}
@@ -99,7 +105,7 @@ export function ExtendDueDateDialog(props: ExtendDueDateDialog) {
                             Close
                         </Button>
                     </DialogClose>
-                    {updatable && <Button loading={loading} onClick={onConfirmExtend} disabled={loading || !data.extendedDueDate}>
+                    {editable && <Button loading={loading} onClick={onConfirmExtend} disabled={loading || !data.extendedDueDate}>
                         Confirm Extension
                     </Button>}
                 </DialogFooter>

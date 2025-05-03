@@ -3,39 +3,50 @@ import DataTable from "@/components/data-table/DataTable";
 import DataTableColumnHeader from "@/components/data-table/DataTableColumnHeader";
 import DataTablePagination from "@/components/data-table/DataTablePagination";
 import { ConfirmDialog } from "@/components/dialog/ConfirmDialog";
+import SearchInput from "@/components/input/SearchInput";
 import PageHeader from "@/components/page/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthContext } from "@/context/authContext";
 import { getMonthRange, handleError, handleSuccessApi } from "@/lib/utils";
 import bookBorrowingRequestService from "@/modules/book-borrowing-request/service/bookBorrowingRequestService";
-import { Book, defaultBook } from "@/types/Book";
+import bookCategoryService from "@/modules/book-category/service/bookCategoryService";
+import { Book, BookFilter, bookFilterDefault, defaultBook } from "@/types/Book";
 import { BookBorrowingRequestDetails, RequestFilterResponse } from "@/types/BookBorrowingRequest";
-import { DataFilter } from "@/types/filter";
+import { BookCategory } from "@/types/BookCategory";
 import { ConfirmDialogState, confirmDialogStateDefault, FormMode, FormSetting, formSettingDefault } from "@/types/form";
 import { Role } from "@/types/User";
 import { ColumnDef, Row } from "@tanstack/react-table";
-import { Ban, BookmarkPlus, BookmarkX, Pencil, Plus, ShoppingBag, Trash } from "lucide-react";
+import { Ban, BookmarkPlus, BookmarkX, MessageSquareText, Pencil, Plus, ShoppingBag, Trash } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import BookBag from "../components/BookBag";
 import { BookColumnsData } from "../components/BookColumnsData";
+import { FilterDropdown } from "../components/FilterDropdown";
 import FormDetails from "../components/FormDetails";
 import bookService from "../service/bookCategoryService";
+import BookCommentDialog from "../components/BookCommentDialog";
+import { BookRating } from "@/types/BookRating";
+import bookRatingService from "../service/bookRatingService";
 
 export default function BookList() {
     const { user } = useAuthContext();
     const [data, setData] = useState<Book[]>([]);
+    const [categories, setCategories] = useState<BookCategory[]>([]);
     const [userRequestInfo, setUserRequestInfo] = useState<RequestFilterResponse>();
-    const [filter, setFilter] = useState<DataFilter>({ pageNumber: 1, pageSize: 5 });
+    const [filter, setFilter] = useState<BookFilter>(bookFilterDefault);
     const [totalRecords, setTotalRecords] = useState<number>(0);
     const [formSetting, setFormSetting] = useState<FormSetting>(formSettingDefault);
     const [detail, setDetail] = useState<Book>();
+    const [bookRatingDetail, setBookRatingDetail] = useState<BookRating>();
     const [openDeleteDialog, setOpenDeleteDialog] = useState<ConfirmDialogState>(confirmDialogStateDefault);
     const [tableLoading, setTableLoading] = useState<boolean>(false);
     const [formLoading, setFormLoading] = useState<boolean>(false);
     const [selectedBooks, setSelectedBooks] = useState<Book[]>([]);
     const [openBookBag, setOpenBookBag] = useState<boolean>(false);
+    const [openCommentView, setOpenCommentView] = useState<boolean>(false);
+    const [loadingComment, setLoadingComment] = useState<boolean>(false);
 
     const columnsAdmin: ColumnDef<Book>[] = [
         ...BookColumnsData,
@@ -50,10 +61,10 @@ export default function BookList() {
         {
             id: 'actions',
             header: ({ column }) => (
-                <DataTableColumnHeader className="text-end mr-22" column={column} title='Action' />
+                <DataTableColumnHeader className="text-center" column={column} title='Action' />
             ),
             cell: ({ row }) => (
-                <div className="flex space-x-2 justify-end">
+                <div className="flex space-x-2 justify-center">
                     <Button onClick={() => handleFormAction(FormMode.EDIT, row)} variant="outline" size="sm" className="h-8 px-2 py-0">
                         <Pencil size={14} className="mr-1" />
                         Edit
@@ -62,13 +73,29 @@ export default function BookList() {
                         <Trash size={14} className="mr-1" />
                         Delete
                     </Button>
+                    <Button onClick={() => handleOpenRatingView(row)} size="sm" className="h-8 px-2 py-0 bg-yellow-500">
+                        <MessageSquareText size={16} />
+                    </Button>
                 </div>
             ),
         }
     ];
 
-    const columnsCustomer: ColumnDef<Book>[] =
-        userRequestInfo?.totalRequest == userRequestInfo?.maxRequestPerMonth ? BookColumnsData : [
+    const columnsCustomer: ColumnDef<Book>[] = userRequestInfo?.totalRequest == userRequestInfo?.maxRequestPerMonth ?
+        [...BookColumnsData, {
+            id: 'actions',
+            header: ({ column }) => (
+                <DataTableColumnHeader className="text-center" column={column} title='Action' />
+            ),
+            cell: ({ row }) => (
+                <div className="flex space-x-2 justify-center">
+                    <Button onClick={() => handleOpenRatingView(row)} size="sm" className="h-8 px-2 py-0 bg-yellow-500">
+                        <MessageSquareText size={16} />
+                    </Button>
+                </div>
+            )
+        }]
+        : [
             {
                 id: 'select',
                 header: () => {
@@ -90,7 +117,7 @@ export default function BookList() {
             {
                 id: 'actions',
                 header: ({ column }) => (
-                    <DataTableColumnHeader className="text-end mr-22" column={column} title='Action' />
+                    <DataTableColumnHeader className="text-center" column={column} title='Action' />
                 ),
                 cell: ({ row }) => (
                     <div className="flex space-x-2 justify-center">
@@ -107,6 +134,9 @@ export default function BookList() {
                                     </Button>
                             )
                         }
+                        <Button onClick={() => handleOpenRatingView(row)} size="sm" className="h-8 px-2 py-0 bg-yellow-500">
+                            <MessageSquareText size={16} />
+                        </Button>
                     </div>
                 ),
 
@@ -114,6 +144,9 @@ export default function BookList() {
         ];
 
     useEffect(() => {
+        bookCategoryService.getByFilter().then(res => {
+            setCategories(res.data || [])
+        })
         if (user?.role == Role.Customer) handleGetUserRequestInfo();
     }, [])
 
@@ -193,13 +226,16 @@ export default function BookList() {
             }))
         }
         console.log("Requested books:", bookBorrowingRequest)
+        setFormLoading(true);
         bookBorrowingRequestService.create(bookBorrowingRequest).then(res => {
             handleSuccessApi({ title: "Requested successfully!", message: res.message });
             handleGetUserRequestInfo();
             handleGetList();
+        }).finally(() => {
+            setFormLoading(false)
+            setOpenBookBag(false);
+            setSelectedBooks([]);
         })
-        setSelectedBooks([]);
-        setOpenBookBag(false);
     }
 
     const handleSelectBook = (book: Book, isAdd: boolean) => {
@@ -213,6 +249,41 @@ export default function BookList() {
         else {
             setSelectedBooks(selectedBooks.filter(x => x.id !== book.id))
         }
+    }
+
+    //COMMENT & RATING
+    const handleOpenRatingView = (row?: Row<Book>) => {
+        if (!row) return;
+        setLoadingComment(true)
+        const book = row.original;
+        bookRatingService.getByBookId(book.id).then(res => {
+            const bookInfo: BookRating = { ...res.data! };
+            bookInfo.id = book.id;
+            bookInfo.title = book.title;
+            bookInfo.author = book.author;
+            bookInfo.categoryName = book.categoryName;
+            bookInfo.available = book.available;
+            setBookRatingDetail(bookInfo);
+        }).finally(() => setLoadingComment(false))
+        setOpenCommentView(true);
+    }
+
+    //SEARCH & FILTER
+    const handleSearch = (query: string) => {
+        setFilter({ ...filter, searchValue: query })
+    };
+    const handleCategoryChange = (value: string) => {
+        const categoryId = value === "all" ? undefined : value;
+        setFilter({ ...filter, categoryId: categoryId })
+    };
+    const handleFilters = (newFilters: { availability: [number, number], rating: [number, number] }) => {
+        setFilter({
+            ...filter,
+            minAvailable: newFilters.availability[0],
+            maxAvailable: newFilters.availability[1],
+            minRating: newFilters.rating[0],
+            maxRating: newFilters.rating[1],
+        })
     }
 
     return (
@@ -246,6 +317,33 @@ export default function BookList() {
                     </Button>
                 }
             </PageHeader>
+            <div className="flex space-x-3">
+                <SearchInput onSearch={handleSearch} />
+                <Select defaultValue={"all"} onValueChange={handleCategoryChange}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select request status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Category</SelectLabel>
+                            <SelectItem value="all">All</SelectItem>
+                            {
+                                categories?.map(x => {
+                                    return <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
+                                })
+                            }
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <div>
+                    <FilterDropdown
+                        availableRange={[0, 50]}
+                        defaultAvailableValue={[0, 50]}
+                        defaultRatingValue={[0, 5]}
+                        onApplyFilters={handleFilters}
+                    />
+                </div>
+            </div>
             <div className='space-y-4'>
                 <DataTable onDataSelected={setSelectedBooks} data={data} columns={user?.role == Role.Admin ? columnsAdmin : columnsCustomer} loading={tableLoading} />
                 <DataTablePagination
@@ -256,10 +354,11 @@ export default function BookList() {
                     pageNumber={filter?.pageNumber}
                     totalRecords={totalRecords}
                     onPageNumberChanged={(pageNumber: number) => setFilter({ ...filter, pageNumber: pageNumber })}
-                    onPageSizeChanged={(pageSize: number) => setFilter({ pageNumber: 1, pageSize: pageSize })} />
+                    onPageSizeChanged={(pageSize: number) => setFilter({ ...filter, pageNumber: 1, pageSize: pageSize })} />
             </div>
             <FormDetails
                 title="Book"
+                categories={categories}
                 loading={formLoading}
                 data={detail}
                 onSubmit={handleFormSubmit}
@@ -272,7 +371,14 @@ export default function BookList() {
                 selectedBooks={selectedBooks}
                 setSelectedBooks={setSelectedBooks}
                 onSubmitRequest={handleSubmitBorrowingRequest}
+                loading={formLoading}
             />
+
+            <BookCommentDialog
+                book={bookRatingDetail}
+                open={openCommentView}
+                onOpenChange={setOpenCommentView}
+                loading={loadingComment} />
 
             <ConfirmDialog
                 destructive

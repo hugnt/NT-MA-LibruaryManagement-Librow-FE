@@ -49,10 +49,12 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         const refreshToken = getRefreshToken();
         if (refreshToken) {
             console.log("LOGOUT", refreshToken)
+
             loginService.logout({ refreshToken }).finally(() => removeClientToken());
         }
-        setUser(undefined);
+        // location.href = PATH.Login;
         setIsAuthenticated(false);
+        setUser(undefined);
     };
 
     const login = async (data: LoginRequest): Promise<Result<LoginResponse>> => {

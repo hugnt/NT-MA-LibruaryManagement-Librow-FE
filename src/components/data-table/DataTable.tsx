@@ -50,7 +50,7 @@ export default function DataTable<TData, TValue>(props: DataTableProps<TData, TV
       onDataSelected(selected);
     }
   }, [onDataSelected, rowSelection, table]);
-  
+
   return (
     <>
       <div>
@@ -72,7 +72,7 @@ export default function DataTable<TData, TValue>(props: DataTableProps<TData, TV
             ))}
           </TableHeader>
           <TableBody >
-            {table.getRowModel().rows?.length ? (
+            {!loading && table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
