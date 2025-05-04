@@ -270,7 +270,7 @@ export default function BookList() {
 
     //SEARCH & FILTER
     const handleSearch = (query: string) => {
-        setFilter({ ...filter, searchValue: query })
+        setFilter({ ...filter, pageNumber: 1, searchValue: query })
     };
     const handleCategoryChange = (value: string) => {
         const categoryId = value === "all" ? undefined : value;

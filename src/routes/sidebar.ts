@@ -9,7 +9,7 @@ export const SidebarData = [
     url: PATH.Dashboard,
     icon: LayoutDashboard,
     isActive: true,
-    roles: [Role.Admin, Role.Customer]
+    roles: [Role.Admin]
   },
   {
     title: "Books",

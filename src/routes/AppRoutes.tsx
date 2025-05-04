@@ -20,7 +20,6 @@ export const AppRoutes = createBrowserRouter([
       <MainLayout />
     </PrivateRoute>,
     children: [
-      ...DashboardRoutes,
       ...BookRoutes,
       ...BookBorrowingRequestRoutes,
     ],
@@ -32,6 +31,7 @@ export const AppRoutes = createBrowserRouter([
       </PermissionRoute>
     </PrivateRoute>,
     children: [
+      ...DashboardRoutes,
       ...BookCategoryRoutes,
       ...UserRoutes
     ],

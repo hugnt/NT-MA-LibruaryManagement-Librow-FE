@@ -70,3 +70,15 @@ export type Token = {
     accessToken?: string;
     refreshToken?: string;
 };
+
+export type AuditLog = {
+    userId?: string;
+    fullname?: string;
+    role?: Role;
+    action?: string;
+    entityName?: string;
+    entityId?: string;
+    oldValues?: string;
+    newValues?: string;
+    createdAt?: Date;
+}
