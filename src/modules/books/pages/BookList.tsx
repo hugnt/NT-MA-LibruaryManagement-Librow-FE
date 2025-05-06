@@ -222,7 +222,7 @@ export default function BookList() {
         const bookBorrowingRequest: BookBorrowingRequestDetails = {
             details: selectedBooks.map(x => ({
                 bookId: x.id,
-                dueDate: x.dueDate
+                dueDate: x.dueDate!
             }))
         }
         console.log("Requested books:", bookBorrowingRequest)

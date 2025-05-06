@@ -105,6 +105,7 @@ export default function BookCommentDialog({ book, open, onOpenChange, loading = 
                                 ) : (
                                     book.reviews.map((x) => (
                                         <div key={x.id} className="border rounded-lg p-3">
+                                            <span className="text-xs text-muted-foreground">{x.commentTime}</span>
                                             <div className="flex justify-between items-center mb-2">
                                                 <h5 className="font-medium">{x.reviewerName}</h5>
                                                 <StarRating rating={x.rate} />

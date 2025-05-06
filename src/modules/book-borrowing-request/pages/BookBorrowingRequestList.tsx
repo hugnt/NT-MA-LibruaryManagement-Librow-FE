@@ -124,7 +124,7 @@ export default function BookBorrowingRequestList() {
             handleGetList();
         }).finally(() => {
             setLoadingConfirm(false);
-            setOpenApproveDialog({ ...openApproveDialog, open: false })
+            setOpenApproveDialog({ ...openRefuseDialog, open: false })
         });
     }
 

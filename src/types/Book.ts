@@ -10,7 +10,7 @@ export type Book = {
     author: string;
     quantity: number;
     available: number;
-    dueDate: string;
+    dueDate?: string;
 }
 
 export const defaultBook: Book = {

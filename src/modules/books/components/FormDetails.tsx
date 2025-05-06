@@ -7,6 +7,8 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHe
 import { Book, defaultBook } from "@/types/Book";
 import { BookCategory } from "@/types/BookCategory";
 import { FormMode, FormSetting, formSettingDefault } from "@/types/form";
+import { BookSchema } from "@/types/schema/bookSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
@@ -23,6 +25,7 @@ interface FormDetailProps {
 export default function FormDetails(props: FormDetailProps) {
     const { formSetting = formSettingDefault, setFormSetting = () => { }, data, categories = [], onSubmit = () => { }, title = "Details", loading = false } = props;
     const form = useForm<Book>({
+        resolver: zodResolver(BookSchema),
         defaultValues: data ?? defaultBook,
     })
 
@@ -31,11 +34,6 @@ export default function FormDetails(props: FormDetailProps) {
         if (data) form.reset(data);
     }, [data])
 
-    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        form.handleSubmit(onSubmit)();
-
-    }
 
     return (
         <Sheet
@@ -59,7 +57,7 @@ export default function FormDetails(props: FormDetailProps) {
                     <Form {...form}>
                         <form
                             id='tasks-form'
-                            onSubmit={handleFormSubmit}
+                            onSubmit={form.handleSubmit(onSubmit)}
                             className='flex-1 space-y-5 px-4'>
                             <FormField
                                 control={form.control}
@@ -120,7 +118,9 @@ export default function FormDetails(props: FormDetailProps) {
                                     <FormItem className='space-y-1'>
                                         <FormLabel>Quantity</FormLabel>
                                         <FormControl>
-                                            <Input type="number" {...field} placeholder='Enter quantity' />
+                                            <Input type="number" {...field}
+                                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                                placeholder='Enter quantity' />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

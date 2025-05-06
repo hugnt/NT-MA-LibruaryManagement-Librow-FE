@@ -34,7 +34,6 @@ export default function FormDetails(props: FormDetailProps) {
 
     const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(form.getValues())
         form.handleSubmit(onSubmit)();
     }
 

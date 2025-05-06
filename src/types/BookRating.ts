@@ -12,6 +12,7 @@ export type ReviewModel = {
     reviewerName: string;
     comment: string;
     rate: number;
+    commentTime: string;
 }
 
 export type BookRating = Book & {
